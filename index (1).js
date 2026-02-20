@@ -201,59 +201,66 @@ client.on('interactionCreate', async interaction => {
     }
 
     // ===== /gen command =====
-    if (commandName === 'gen') {
-        const cooldown = cooldowns.get(user.id);
-        const now = Date.now();
-        if (cooldown && now - cooldown < 1000*60*1) {
-            const remaining = Math.ceil((1000*60 - (now - cooldown))/1000);
-            return interaction.reply({ 
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(0xFF0000)
-                        .setTitle('⏱ Cooldown')
-                        .setDescription(`You need to wait **${remaining} seconds** before generating again!`)
-                        .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
-                ],
-                ephemeral: true
-            });
-        }
+if (commandName === 'gen') {
+    const now = Date.now();
 
-        const hasPremium = users.subscriptions.some(sub => sub.userId === user.id && sub.expiresAt > Date.now());
-        if (!hasPremium) {
-            return interaction.reply({ content: '❌ You must be subscribed to generate an account!', ephemeral: true });
-        }
+    // ===== Get user's subscription and cooldown =====
+    const sub = users.subscriptions.find(s => s.userId === user.id && s.expiresAt > now);
+    const userCooldownSeconds = sub ? sub.cooldown || 0 : 0;
 
-        if (!users.stock.length) return interaction.reply({ content: 'No stock available!', ephemeral: true });
+    const lastUsed = cooldowns.get(user.id) || 0;
+    const nextAvailable = lastUsed + userCooldownSeconds * 1000;
 
-        const account = users.stock.shift();
-        users.used.push(account);
-        fs.writeFileSync('./users.json', JSON.stringify(users, null, 2));
-        cooldowns.set(user.id, now);
-
-        users.stats.userCounts[user.id] = (users.stats.userCounts[user.id] || 0) + 1;
-        users.stats.logs.push({ userId: user.id, time: now });
-        fs.writeFileSync('./users.json', JSON.stringify(users, null, 2));
-
-        const dmEmbed = new EmbedBuilder()
-            .setColor(0x5865F2)
-            .setTitle('✨ Your Lux Account')
-            .setDescription(`Here’s your account info:\n\`\`\`${account}\`\`\``)
-            .setThumbnail(LUX_LOGO)
-            .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
-            .setTimestamp();
-        try { await user.send({ embeds: [dmEmbed] }); } catch {}
-
-        const publicEmbed = new EmbedBuilder()
-            .setColor(0x5865F2)
-            .setTitle('🎉 Account Generated! 🎉')
-            .setDescription(`<@${user.id}> just generated an account! 🤩`)
-            .setThumbnail(LUX_LOGO)
-            .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
-            .setTimestamp();
-        await channel.send({ embeds: [publicEmbed] });
-
-        await updateLeaderboard(channel);
+    if (now < nextAvailable) {
+        const remaining = Math.ceil((nextAvailable - now) / 1000);
+        return interaction.reply({ 
+            embeds: [
+                new EmbedBuilder()
+                    .setColor(0xFF0000)
+                    .setTitle('⏱ Cooldown')
+                    .setDescription(`You need to wait **${remaining} seconds** before generating again!`)
+                    .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
+            ],
+            ephemeral: true
+        });
     }
+
+    const hasPremium = users.subscriptions.some(sub => sub.userId === user.id && sub.expiresAt > Date.now());
+    if (!hasPremium) {
+        return interaction.reply({ content: '❌ You must be subscribed to generate an account!', ephemeral: true });
+    }
+
+    if (!users.stock.length) return interaction.reply({ content: 'No stock available!', ephemeral: true });
+
+    const account = users.stock.shift();
+    users.used.push(account);
+    fs.writeFileSync('./users.json', JSON.stringify(users, null, 2));
+    cooldowns.set(user.id, now);
+
+    users.stats.userCounts[user.id] = (users.stats.userCounts[user.id] || 0) + 1;
+    users.stats.logs.push({ userId: user.id, time: now });
+    fs.writeFileSync('./users.json', JSON.stringify(users, null, 2));
+
+    const dmEmbed = new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle('✨ Your Lux Account')
+        .setDescription(`Here’s your account info:\n\`\`\`${account}\`\`\``)
+        .setThumbnail(LUX_LOGO)
+        .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
+        .setTimestamp();
+    try { await user.send({ embeds: [dmEmbed] }); } catch {}
+
+    const publicEmbed = new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle('🎉 Account Generated! 🎉')
+        .setDescription(`<@${user.id}> just generated an account! 🤩`)
+        .setThumbnail(LUX_LOGO)
+        .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
+        .setTimestamp();
+    await channel.send({ embeds: [publicEmbed] });
+
+    await updateLeaderboard(channel);
+}
 
     // ===== /stock command =====
     if (commandName === 'stock') {
@@ -383,4 +390,4 @@ client.on('interactionCreate', async interaction => {
 });
 
 // Login
-client.login(process.env.TOKEN);
+client.login(config.token);

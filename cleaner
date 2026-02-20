@@ -1,0 +1,28 @@
+import re
+import os
+
+# Strict email:password pattern
+pattern = re.compile(r'([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+):([^\s:]+)')
+
+print("Scanning folder for .txt files...")
+
+files = [f for f in os.listdir() if f.endswith(".txt")]
+
+if not files:
+    print("No .txt files found.")
+else:
+    for file in files:
+        output_file = f"cleaned_{file}"
+        
+        with open(file, "r", encoding="utf-8", errors="ignore") as infile, \
+             open(output_file, "w", encoding="utf-8") as outfile:
+
+            for line in infile:
+                matches = pattern.findall(line)
+                for email, password in matches:
+                    outfile.write(f"{email}:{password}\n")
+
+        print(f"Cleaned -> {output_file}")
+
+print("Done!")
+input("Press Enter to exit...")
