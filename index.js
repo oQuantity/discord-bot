@@ -52,7 +52,7 @@ async function updateLeaderboard(channel) {
     const top24h = Object.entries(counts24)
         .sort((a,b)=> b[1]-a[1])
         .slice(0,5)
-        .map(([uid,count],i)=> ${i+1}. <@${uid}> (${count}))
+        .map(([uid, count], i) => `${i + 1}. <@${uid}> (${count})`)
         .join('\n') || 'N/A';
 
     const embed = new EmbedBuilder()
