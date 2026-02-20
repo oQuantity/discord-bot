@@ -42,7 +42,7 @@ async function updateLeaderboard(channel) {
     const lifetimeTop = Object.entries(users.stats.userCounts || {})
         .sort((a,b)=> b[1]-a[1])
         .slice(0,5)
-        .map(([uid,count],i)=> `${i+1}. <@${uid}> (${count})`)
+        .map(([uid,count],i)=> ${i+1}. <@${uid}> (${count}))
         .join('\n') || 'N/A';
 
     const counts24 = {};
@@ -52,7 +52,7 @@ async function updateLeaderboard(channel) {
     const top24h = Object.entries(counts24)
         .sort((a,b)=> b[1]-a[1])
         .slice(0,5)
-        .map(([uid,count],i)=> `${i+1}. <@${uid}> (${count})`)
+        .map(([uid,count],i)=> ${i+1}. <@${uid}> (${count}))
         .join('\n') || 'N/A';
 
     const embed = new EmbedBuilder()
@@ -78,7 +78,35 @@ async function updateLeaderboard(channel) {
 }
 
 // Ready
-client.once('ready', () => console.log('Lux Bot is online!'));
+client.once('ready', async () => {
+    console.log('Lux Bot is online!');
+
+    // ===== Register slash commands =====
+    const commands = [
+        {
+            name: 'subscribe',
+            description: 'Subscribe a user',
+            options: [
+                { name: 'target', type: 6, description: 'User to subscribe', required: true },
+                { name: 'duration', type: 4, description: 'Duration in seconds', required: false },
+                { name: 'cooldown', type: 4, description: 'Cooldown in seconds', required: false }
+            ]
+        },
+        { name: 'gen', description: 'Generate an account' },
+        {
+            name: 'stock',
+            description: 'Upload stock file',
+            options: [
+                { name: 'file', type: 11, description: 'Text file with stock', required: true }
+            ]
+        },
+        { name: 'removestock', description: 'Remove all stock' },
+        { name: 'stats', description: 'View bot statistics' }
+    ];
+
+    await client.application.commands.set(commands, config.guildId);
+    console.log('Slash commands registered instantly.');
+});
 
 // ===== Auto-remove expired subscriptions =====
 setInterval(async () => {
@@ -95,8 +123,8 @@ setInterval(async () => {
                 const member = await guild.members.fetch(sub.userId).catch(() => null);
                 if (member) {
                     await member.roles.remove(config.premiumRoleId);
-                    console.log(`Removed expired premium role from ${member.user.tag}`);
-                    await member.send({ content: `💔 Your premium subscription has expired.` }).catch(() => {});
+                    console.log(Removed expired premium role from ${member.user.tag});
+                    await member.send({ content:💔 Your premium subscription has expired.` }).catch(() => {});
                 }
             } catch (err) {
                 console.error('Error removing expired subscription:', err);
@@ -136,10 +164,10 @@ client.on('interactionCreate', async interaction => {
         const seconds = durationSeconds % 60;
 
         let durationText = '';
-        if (days) durationText += `${days}d `;
-        if (hours) durationText += `${hours}h `;
-        if (minutes) durationText += `${minutes}m `;
-        if (seconds) durationText += `${seconds}s`;
+        if (days) durationText += ${days}d ;
+        if (hours) durationText += ${hours}h ;
+        if (minutes) durationText += ${minutes}m ;
+        if (seconds) durationText += ${seconds}s;
 
         try {
             const member = await interaction.guild.members.fetch(targetUser.id);
@@ -156,14 +184,14 @@ client.on('interactionCreate', async interaction => {
             const publicEmbed = new EmbedBuilder()
                 .setColor(0x5865F2)
                 .setTitle('🎉 New Premium Subscriber! 🎉')
-                .setDescription(`✨ <@${targetUser.id}> just got **premium**!\nSubscribed for **${durationText.trim()}** 🎊`)
+                .setDescription(✨ <@${targetUser.id}> just got **premium**!\nSubscribed for **${durationText.trim()}** 🎊)
                 .setThumbnail(LUX_LOGO)
                 .setImage('https://media.giphy.com/media/3o7aD6vRNRlWlLXdJ2/giphy.gif')
                 .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
                 .setTimestamp();
 
             await interaction.reply({ embeds: [publicEmbed], ephemeral: false });
-            console.log(`${targetUser.tag} subscribed successfully for ${durationSeconds}s with ${cooldownSeconds}s cooldown.`);
+            console.log(${targetUser.tag} subscribed successfully for ${durationSeconds}s with ${cooldownSeconds}s cooldown.);
         } catch (err) {
             console.error('Subscribe command error:', err);
             if (!interaction.replied) {
@@ -183,7 +211,7 @@ client.on('interactionCreate', async interaction => {
                     new EmbedBuilder()
                         .setColor(0xFF0000)
                         .setTitle('⏱ Cooldown')
-                        .setDescription(`You need to wait **${remaining} seconds** before generating again!`)
+                        .setDescription(You need to wait **${remaining} seconds** before generating again!)
                         .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
                 ],
                 ephemeral: true
@@ -218,7 +246,7 @@ client.on('interactionCreate', async interaction => {
         const publicEmbed = new EmbedBuilder()
             .setColor(0x5865F2)
             .setTitle('🎉 Account Generated! 🎉')
-            .setDescription(`<@${user.id}> just generated an account! 🤩`)
+            .setDescription(<@${user.id}> just generated an account! 🤩)
             .setThumbnail(LUX_LOGO)
             .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
             .setTimestamp();
@@ -245,7 +273,7 @@ client.on('interactionCreate', async interaction => {
             const embed = new EmbedBuilder()
                 .setColor(0x5865F2)
                 .setTitle('🎉 Stock Added! 🎉')
-                .setDescription(`Stock has been added, you’re welcome! 🤩\n**${lines.length} new accounts** now available! 🎆🎊`)
+                .setDescription(Stock has been added, you’re welcome! 🤩\n**${lines.length} new accounts** now available! 🎆🎊)
                 .setThumbnail(LUX_LOGO)
                 .setImage('https://media.giphy.com/media/3o7aD6vRNRlWlLXdJ2/giphy.gif')
                 .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
@@ -258,13 +286,34 @@ client.on('interactionCreate', async interaction => {
         }
     }
 
+    // ===== /removestock command =====
+    if (commandName === 'removestock') {
+        if (!interaction.member.roles.cache.has(config.adminRoleId)) {
+            return interaction.reply({ content: 'No permission.', ephemeral: true });
+        }
+
+        const removedAmount = users.stock.length;
+
+        users.stock = [];
+        fs.writeFileSync('./users.json', JSON.stringify(users, null, 2));
+
+        const embed = new EmbedBuilder()
+            .setColor(0xFF0000)
+            .setTitle('🗑️ Stock Cleared!')
+            .setDescription(All stock has been removed!\n\n**${removedAmount} accounts deleted.**)
+            .setThumbnail(LUX_LOGO)
+            .setFooter({ text: 'Lux Generator', iconURL: LUX_LOGO })
+            .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+    }
+
     // ===== /stats command =====
     if (commandName === 'stats') {
         if (!interaction.member.roles.cache.has(config.adminRoleId)) {
             return interaction.reply({ content: 'No permission.', ephemeral: true });
         }
 
-        // Defer reply to prevent timeout
         await interaction.deferReply({ ephemeral: false });
 
         const now = Date.now();
@@ -289,12 +338,12 @@ client.on('interactionCreate', async interaction => {
         const lifetimeTop = Object.entries(users.stats.userCounts || {})
             .sort((a,b)=> b[1]-a[1])
             .slice(0,5)
-            .map(([uid,count],i)=> `${i+1}. <@${uid}> (${count})`)
+            .map(([uid,count],i)=> ${i+1}. <@${uid}> (${count}))
             .join('\n') || 'N/A';
         const top24h = Object.entries(counts24)
             .sort((a,b)=> b[1]-a[1])
             .slice(0,5)
-            .map(([uid,count],i)=> `${i+1}. <@${uid}> (${count})`)
+            .map(([uid,count],i)=> ${i+1}. <@${uid}> (${count}))
             .join('\n') || 'N/A';
 
         let mostActivePremium = 'N/A';
@@ -306,7 +355,7 @@ client.on('interactionCreate', async interaction => {
             premiumCounts.sort((a,b)=> b.count - a.count);
             const topPremium = premiumCounts[0];
             if (topPremium.count > 0) {
-                mostActivePremium = `<@${topPremium.userId}> (${topPremium.count} generated)`;
+                mostActivePremium = <@${topPremium.userId}> (${topPremium.count} generated);
             }
         }
 
@@ -315,13 +364,13 @@ client.on('interactionCreate', async interaction => {
             .setTitle('📊 Lux Bot Stats')
             .setThumbnail(LUX_LOGO)
             .addFields(
-                { name: '💎 Total Generated (Lifetime)', value: `${lifetimeTotal}`, inline: true },
-                { name: '💎 Total Generated (24h)', value: `${total24}`, inline: true },
-                { name: '👤 Unique Users (Lifetime)', value: `${lifetimeUnique}`, inline: true },
-                { name: '👤 Unique Users (24h)', value: `${unique24}`, inline: true },
-                { name: '⏱ Average/hour (Lifetime)', value: `${lifetimeAvg}`, inline: true },
-                { name: '⏱ Average/hour (24h)', value: `${avg24}`, inline: true },
-                { name: '📦 Stock Remaining', value: `${stockRemaining}`, inline: true },
+                { name: '💎 Total Generated (Lifetime)', value: ${lifetimeTotal}, inline: true },
+                { name: '💎 Total Generated (24h)', value: ${total24}, inline: true },
+                { name: '👤 Unique Users (Lifetime)', value: ${lifetimeUnique}, inline: true },
+                { name: '👤 Unique Users (24h)', value: ${unique24}, inline: true },
+                { name: '⏱ Average/hour (Lifetime)', value: ${lifetimeAvg}, inline: true },
+                { name: '⏱ Average/hour (24h)', value: ${avg24}, inline: true },
+                { name: '📦 Stock Remaining', value: ${stockRemaining}, inline: true },
                 { name: '🏆 Top Generators (Lifetime)', value: lifetimeTop, inline: true },
                 { name: '🏆 Top Generators (24h)', value: top24h, inline: true },
                 { name: '💫 Most Active Premium User', value: mostActivePremium, inline: true }
